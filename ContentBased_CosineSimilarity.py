@@ -54,6 +54,8 @@ def main():
     cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
     titles = movies[1]
     indices = pd.Series(movies.index, index=movies[1])
+    print "INDICES-------------------"
+    print indices
     title = 'Good Will Hunting (1997)'
     print('Input: ' + title)
     movie_recommendations = genre_recommendations(title, indices, cosine_sim, titles).head(20)
