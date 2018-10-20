@@ -1,23 +1,14 @@
 #include utf-coding8
-from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+import pandas as pd
 
 import numpy as np
-from sklearn.naive_bayes import GaussianNB
 from sklearn import neighbors
-from sklearn.linear_model import LogisticRegression
-import pandas as pd
-from sklearn.metrics import mean_absolute_error
-import numpy.linalg as LA
-from scipy import optimize
-from sklearn import linear_model
-from sklearn.model_selection import cross_val_score
-import math
 from sklearn.externals import joblib
-import sklearn
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import mean_squared_error
+from sklearn.manifold import TSNE
 from sklearn.metrics import confusion_matrix
-import matplotlib.pyplot as plt
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
 
 col_names= ['user_id', 'item_id', 'rating', 'timestamp']
 col_names1=['userno','age','gender','occu','timestamp']
@@ -365,7 +356,7 @@ def occupation(i):
 def genre(i):
     for k in range (5,24):
         train_features.append( item_info[i][k])
-
+        # print "in genre \n",train_features.__len__()
 #fold 1 
 train_matrix,test_matrix,ratings_train=A(train2,test2,1)
 print "check 1 ",train_matrix.shape
