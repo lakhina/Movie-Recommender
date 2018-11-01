@@ -9,23 +9,22 @@ from sklearn.metrics.pairwise import linear_kernel
 def main():
 
     import json
-    import numpy
     with open("genres.json") as fp:
         genres = json.load(fp)
-    print numpy.array(genres)[:10]
+    # print numpy.array(genres)[:10]
     import pandas as pd
     movies = pd.read_csv('ml-100k/u.item', sep='|', encoding='latin-1', header=None, usecols=[1])
-    print movies.head()
+    # print movies.head()
     tf = TfidfVectorizer(analyzer='word', ngram_range=(1, 2), min_df=0)
     tfidf_matrix = tf.fit_transform(genres)
 
     cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
     titles = movies[1]
     indices = pd.Series(movies.index, index=movies[1])
-    # print "INDICES-------------------"
-    # print indices
+
     title = 'Toy Story (1995)'
-    print('Input: ' + title)
+    print('Movies Recommendations for Movie: ' + title)
+    print
     idx = indices[title]
     sim_scores = list(enumerate(cosine_sim[idx]))
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
