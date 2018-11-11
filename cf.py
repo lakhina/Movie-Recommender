@@ -267,6 +267,8 @@ title_by_id = pd.Series(titles, index=ind)
 
 print "---------------------Collaborative Filtering---------------------------------------"
 print
+print "Movie :",title_by_id[4]
+print
 print ("-------------------Item to Item Similarity Based Recommendation------------------- ")
 top_selected_movie_ids = getRecommendation(4)
 print "****************Movie Recommendations :************************"
@@ -274,6 +276,7 @@ for id in top_selected_movie_ids:
     print title_by_id[id]
 print "-----------------------------------------------------------------------------------"
 print ("-------------------User to User Similarity Based Recommendation-------------------")
+print "User no :",4
 
 top_selected_movie_ids = getRecommended(4)
 print "****************Movie Recommendations :************************"
