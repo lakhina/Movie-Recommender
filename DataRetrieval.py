@@ -35,14 +35,14 @@
 #     i-=k
 #     k+=1
 #     testset.append(data[i])
-# print('Select test 10000 cases.')
+# #print('Select test 10000 cases.')
 # mdata=np.array(data,dtype=int)
 # usernum=int(np.max(mdata[:,0]))
 # itemnum=int(np.max(mdata[:,1]))
-# print('Total user number is : '+str(usernum))
-# print('Total movie number is : '+str(itemnum))
+# #print('Total user number is : '+str(usernum))
+# #print('Total movie number is : '+str(itemnum))
 # fdata = np.array(np.zeros((usernum, itemnum)))
-# print('Formating matrix.')
+# #print('Formating matrix.')
 # for row in mdata:
 #     fdata[row[0]-1, row[1]-1] = row[2]
 # for case in testset:
@@ -97,51 +97,51 @@
 #     return error
 #
 # errorlist=[]
-# print('start test '+str(len(testset)))
+# #print('start test '+str(len(testset)))
 # n=1
 #
 # for testcase in testset:
 #     if n % 100==0:
-#         print('Test has finished : '+str(n/100)+'%' )
+#         #print('Test has finished : '+str(n/100)+'%' )
 #     error1=findKNNuser(copy.deepcopy(fdata), testcase)
 #     errorlist.append((error1)**2)
 #     n+=1
-# print('User-based KNN - Test finished')
+# #print('User-based KNN - Test finished')
 # meanserror=np.average(errorlist)
-# print('User-based MSE: ', meanserror)
+# #print('User-based MSE: ', meanserror)
 #
 # for testcase in testset:
 #     if n % 100==0:
-#         print('Test has finished : '+str(n/100)+'%' )
+#         #print('Test has finished : '+str(n/100)+'%' )
 #     error2=findKNNitem(copy.deepcopy(fdata), testcase)
 #     errorlist.append((error2)**2)
 #     n+=1
-# print('test finished')
+# #print('test finished')
 # meanserror=np.average(errorlist)
-# print('Item-based MSE: ', meanserror)
+# #print('Item-based MSE: ', meanserror)
 #
 # for testcase in testset:
 #     if n % 100==0:
-#         print('Test has finished : '+str(n/100)+'%' )
+#         #print('Test has finished : '+str(n/100)+'%' )
 #     error1=findKNNuser(copy.deepcopy(fdata), testcase)
 #     error2=findKNNitem(copy.deepcopy(fdata), testcase)
 #     errorlist.append((error1/2+error2/2)**2)
 #     n+=1
-# print('test finished')
+# #print('test finished')
 # meanserror=np.average(errorlist)
-# print('Mixed User-Item based: ',meanserror)
+# #print('Mixed User-Item based: ',meanserror)
 
 
 """data Retrieval"""
 import pandas as pd
 
 ratings = pd.read_csv('ml-100k/u.data', sep='\t', encoding='latin-1', header=None, usecols=[0, 1, 2])
-print ratings.head()
-print ratings.shape
+# print ratings.head()
+# print ratings.shape
 genres = pd.read_csv('ml-100k/u.genre', sep='|', encoding='latin-1', header=None)
-print genres.head()
+#print genres.head()
 dict_genres = dict(zip(genres[1], genres[0]))
-print dict_genres
+#print dict_genres
 # movies = pd.read_csv('data/movies.csv', sep='\t', encoding='latin-1', usecols=['movie_id', 'title', 'genres'])
 movies_cols = [0, 1]
 temp_genres = [i for i in range(5, 24)]
@@ -149,19 +149,19 @@ movies_cols += temp_genres
 # movies_cols=["id","title"]
 # temp_genres=[dict_genres[i-5] for i in range(5,24)]
 # movies_cols+=temp_genres
-print movies_cols
+#print movies_cols
 movies = pd.read_csv('ml-100k/u.item', sep='|', encoding='latin-1', header=None, usecols=movies_cols)
-print movies.head()
+#print movies.head()
 
 # for i in range(5,24):
-#     print movies.loc[(movies[i] ==1)]
+#     #print movies.loc[(movies[i] ==1)]
 # movies.loc[(movies[i] ==1)] = dict_genres[i-5]
 import numpy
 
 movies_arr = numpy.array(movies)
-print "Movies array----------------------"
-print movies_arr.shape
-print movies_arr.T[0]
+# print "Movies array----------------------"
+# print movies_arr.shape
+#print movies_arr.T[0]
 for i in range(2, 21):
     for j in range(len(movies_arr.T[0])):
         if movies_arr.T[i][j] == 1:
@@ -169,10 +169,10 @@ for i in range(2, 21):
         if movies_arr.T[i][j] == 0:
             movies_arr.T[i][j] = ""
 
-print movies_arr.T[5:7]
-print movies_arr[:10]
-print movies_arr.shape
-print len(movies_arr[0])
+# print movies_arr.T[5:7]
+# print movies_arr[:10]
+# print movies_arr.shape
+#print len(movies_arr[0])
 movies_arr_cleaned = []
 import re
 
@@ -183,15 +183,15 @@ for i in range(len(movies_arr.T[0])):
         temp += str(movies_arr[i][j]).encode('utf-8') + " "
         temp.encode('utf-8')
         temp = re.sub("\s+", ' ', temp)
-    # print temp
+    # #print temp
     movies_arr_cleaned.append(temp)
     temp = ""
-# print movies.head()
-# print movies.shape
+# #print movies.head()
+# #print movies.shape
 import json
 
 with open("genres.json", 'w') as fp:
     json.dump(movies_arr_cleaned, fp)
-print len(movies_arr_cleaned)
+#print len(movies_arr_cleaned)
 df = pd.DataFrame(movies_arr_cleaned)
 df.to_csv("genres.csv")

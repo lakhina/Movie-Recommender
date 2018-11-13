@@ -1,6 +1,5 @@
-import pandas as pd
-
 import numpy as np
+import pandas as pd
 from sklearn.metrics.pairwise import pairwise_distances
 
 flag = False
@@ -11,8 +10,8 @@ re_flag = False
 r_cols = ['user_id', 'movie_id', 'rating', 'unix_timestamp']
 ratings = pd.read_csv('ml-100k/u.data', sep='\t', names=r_cols)
 if flag:
-    print (ratings.user_id.unique())
-    print (ratings.user_id.unique().shape)
+    print(ratings.user_id.unique())
+    print(ratings.user_id.unique().shape)
 number_of_users = ratings.user_id.unique().shape[0]
 number_of_items = ratings.movie_id.unique().shape[0]
 
@@ -29,30 +28,34 @@ users = pd.read_csv('ml-100k/u.user', sep='|', names=u_cols) #,encoding='latin-1
 ratings_train = pd.read_csv('ml-100k/ua.base', sep='\t', names=r_cols)
 ratings_test = pd.read_csv('ml-100k/ua.test', sep='\t', names=r_cols)
 if flag:
-    print (ratings_train.shape, ratings_test.shape)
+    print(ratings_train.shape, ratings_test.shape)
 
 
 
 # Forming main data matrix user item matrix
 data_matrix = np.zeros((number_of_users, number_of_items))
 for line in ratings.itertuples():
-    # print (line)
+    # print(line)
     data_matrix[line[1] - 1, line[2] - 1] = line[
         3]  # first index in pandas dataframe is unique id, hence started from 1, storing the rating given by user to a particular item
 
 if flag:
-    print (data_matrix.shape)
-#print (data_matrix)   
+    print(data_matrix.shape)
+# print(data_matrix)
 
 user_similarity = 1-pairwise_distances(data_matrix, metric='correlation')
 item_similarity = 1-pairwise_distances(data_matrix.T, metric='correlation')
 if flag:
-    print (user_similarity.shape)
-#print (user_similarity)
+    print(user_similarity.shape)
+# print(user_similarity)
 
 
 
-
+title = pd.read_csv('ml-100k/u.item', sep='|', encoding='latin-1', header=None, usecols=[1])
+titles = title[1]
+ind = [i for i in range(0, len(titles))]
+indices = pd.Series(ind, index=titles)
+title_by_id = pd.Series(titles, index=ind)
 
 
 
@@ -67,7 +70,7 @@ def getRecommended(user):                                                       
     top_5_idx.reverse()
     top_5_idx.pop(0)
     if flag:
-        print (top_5_values)
+        print(top_5_values)
 # add already rated movies by the user too
     i = 0
     # user=1
@@ -76,9 +79,9 @@ def getRecommended(user):                                                       
         if (val != 0):
             tempRecommended.add(i)
             if flag:
-                print (val)
+                print(val)
     if re_flag:
-        print ("recommended originl----- ", tempRecommended)
+        print("recommended originl----- ", tempRecommended)
     # tempRecommended=recommended.copy()
     count = 0
     rating5 = set()
@@ -93,10 +96,10 @@ def getRecommended(user):                                                       
             i += 1
             if (val == 5):
                 if flag:
-                    print ("here 5 ", i)
+                    print("here 5 ", i)
                 if (i not in tempRecommended):
                     if flag:
-                        print ("hello")
+                        print("hello")
                     count += 1
                     recommended.add(i)
                 rating5.add(i)
@@ -153,13 +156,20 @@ def getRecommended(user):                                                       
                 count += 1
         if (count >= 5):
             break
-    return recommended
+    top_selected_movie_ids = recommended
+    result = []
+    for id in top_selected_movie_ids:
+        # print(title_by_id[id])
+        result.append(title_by_id[id])
+    return recommended, result
 
 
-#getRecommended(134)		
+#getRecommended(134)
 if re_flag:
-    print (" ****************************************************************************************************** ")
-#print (recommended)
+    print(" ****************************************************************************************************** ")
+
+
+#print(recommended)
 
 
 
@@ -175,13 +185,14 @@ def getRecommendation(user):                                # using item item si
     i = -1
     count = 0
     temp = data_matrix[user]
+    print(temp)
     for val in temp:
         i += 1
         if (val == 5):
             if flag:
-                print ("here 5 ", i)
+                print("here 5 ", i)
                 # if (i not in tempRecommended):
-                # print ("hello")
+                # print("hello")
             count += 1
             recommended.add(i)
             rating5.add(i)
@@ -238,16 +249,16 @@ def getRecommendation(user):                                # using item item si
         if (count >= 5):
             break
     if flag:
-        print (recommended)
+        print(recommended)
     final_recommended = set()
     for item in recommended:
         top_5_idx = np.argsort(item_similarity[item])[
                     -6:].tolist()  # getting top 6 similar users, will remove top that is the element itself, and 5 will be returned
         if re_flag:
-            print ("------------------- ", top_5_idx)
+            print("------------------- ", top_5_idx)
         top_5_values = [item_similarity[item][i] for i in top_5_idx]
         if re_flag:
-            print (top_5_values)
+            print(top_5_values)
         top_5_idx.reverse()
         top_5_idx.pop(0)
         el = top_5_idx.pop(0)
@@ -255,36 +266,35 @@ def getRecommendation(user):                                # using item item si
             el = top_5_idx.pop(0)
         final_recommended.add(el)
     if re_flag:
-        print ("........................................ ", final_recommended)
-    return final_recommended
+        print("........................................ ", final_recommended)
+    top_selected_movie_ids = final_recommended
+    result = []
+    for id in top_selected_movie_ids:
+        # print(title_by_id[id])
+        result.append(title_by_id[id])
+    return final_recommended, result
 
 
-title = pd.read_csv('ml-100k/u.item', sep='|', encoding='latin-1', header=None, usecols=[1])
-titles = title[1]
-ind = [i for i in range(0, len(titles))]
-indices = pd.Series(ind, index=titles)
-title_by_id = pd.Series(titles, index=ind)
-
-print "---------------------Collaborative Filtering---------------------------------------"
-print
-print ("-------------------Item to Item Similarity Based Recommendation------------------- ")
-print "Movie :",title_by_id[4]
-top_selected_movie_ids = getRecommendation(4)
-print "****************Movie Recommendations :************************"
+print("---------------------Collaborative Filtering---------------------------------------")
+print()
+print("-------------------Item to Item Similarity Based Recommendation------------------- ")
+print("Movie :", title_by_id[4])
+top_selected_movie_ids, rec_mov_titles = getRecommendation(4)
+print("****************Movie Recommendations :************************")
 for id in top_selected_movie_ids:
-    print title_by_id[id]
-print "-----------------------------------------------------------------------------------"
-print ("-------------------User to User Similarity Based Recommendation-------------------")
-print "User id :",4
-top_selected_movie_ids = getRecommended(4)
-print "****************Movie Recommendations :************************"
+    print(title_by_id[id])
+print("-----------------------------------------------------------------------------------")
+print("-------------------User to User Similarity Based Recommendation-------------------")
+print("User id :", 4)
+top_selected_movie_ids, rec_mov_titles = getRecommended(4)
+print("****************Movie Recommendations :************************")
 for id in top_selected_movie_ids:
-    print title_by_id[id]
+    print(title_by_id[id])
 
 
-# print (top_5_idx)
+# print(top_5_idx)
 # lst=data_matrix[top_5_idx[3]]
 # for i in range (0,len(lst)):
 # 	if (lst[i]!=0):
-# 		print (lst[i])
+# 		print(lst[i])
 #

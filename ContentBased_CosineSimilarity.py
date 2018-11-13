@@ -9,13 +9,12 @@ from sklearn.metrics.pairwise import linear_kernel
 def main():
 
     import json
-    import numpy
     with open("genres.json") as fp:
         genres = json.load(fp)
-    print numpy.array(genres)[:10]
+    # print numpy.array(genres)[:10]
     import pandas as pd
     movies = pd.read_csv('ml-100k/u.item', sep='|', encoding='latin-1', header=None, usecols=[1])
-    print movies.head()
+    # print movies.head()
     tf = TfidfVectorizer(analyzer='word', ngram_range=(1, 2), min_df=0)
     tfidf_matrix = tf.fit_transform(genres)
 
