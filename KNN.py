@@ -1,13 +1,15 @@
 #include utf-coding8
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
+
+import numpy as np
 from sklearn import neighbors
 from sklearn.externals import joblib
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 
+den = 0
 col_names= ['user_id', 'item_id', 'rating', 'timestamp']
 col_names1=['userno','age','gender','occu','timestamp']
 col_names2=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x']
@@ -50,23 +52,28 @@ print("Max ages :", np.max(ages))
 
 def transform_ratings(r):
     for i in range (0,len(r)):
-        if r[i]>3:
+        if r[i] > 3:  # ratings greater than 3 is made 2
             r[i]=2
-        elif r[i]==3:
+        elif r[i] == 3:  # ratings equal to 3 is made 1
             r[i]=1
         else :
-            r[i]=0
+            r[i] = 0  # ratings less than 3 is made 0
     return r
+
 
 #extracting item meta data for preparing test data
 def genretest(i):
-    for k in range (5,24):
+    # global den
+    # den+=19
+    for k in range(5, 24):
         test_features.append( item_info[i][k])
 
 #extracting user meta data
 #gender information
 def gendertest(i):
-    #males
+    # global den
+    # den+=2
+    # males
     if user_info[i][2]=='M':
         test_features.extend([1,0])
     #females
@@ -75,6 +82,8 @@ def gendertest(i):
 
 #age information extraction
 def agetest(i):
+    # global den
+    # den+=7
     if user_info[i][1] >=7 :
         if user_info[i][1] <17:
             test_features.extend([1,0,0,0,0,0,0])
@@ -104,6 +113,8 @@ def agetest(i):
 
 #occupation information
 def occupationtest(i):
+    # global den
+    # den += 21
     if user_info[i][3]=="administrator":
         test_features.extend([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
     elif user_info[i][3]=="artist":
@@ -170,13 +181,18 @@ def fitting(m1,m2,samples):
 
 #preparing the data 
 def folds(train_features,test_features):
-    train_features=np.array(train_features)
+    print len(train_features)
+    train_features = np.array(train_features)
         #print len(train_features)
-    dimension=len(train_features)/21
-    train_features=train_features.reshape((dimension,21))
-        #print train_features.shape
+    # den=train_features.shape
+    den = 49  # change to 21 for only genres and gender
+    print den, train_features.size
+    dimension = len(train_features) / den
+
+    train_features = train_features.reshape((dimension, den))
+    #print train_features.shape
     test_features=np.array(test_features)
-    test_features=test_features.reshape((len(test_features)/21,21))
+    test_features=test_features.reshape((len(test_features) / den, den))
     print("Test features shape :", test_features.shape)
 
 #test ratings given in test files
@@ -211,10 +227,10 @@ def metadata(train_matrix,test_matrix):
         for j in range(0,1682):
             if train_matrix[i][j] !=0:
                 gender(i)
-                # occupation(i)
-                # age(i)
-    #print count1
-        
+                occupation(i)
+                age(i)
+    # print count1
+
     tm=train_matrix.T
     for i in range (0,1682):
         for j in range(0,943):
@@ -227,9 +243,9 @@ def metadata(train_matrix,test_matrix):
         for j in range(0,1682):
             if test_matrix[i][j]!=0:
                 gendertest(i)
-                # occupationtest(i)
-                # agetest(i)
-        
+                occupationtest(i)
+                agetest(i)
+
     #in order to append item features
     tesm=test_matrix.T
     for i in range (0,1682):

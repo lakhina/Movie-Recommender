@@ -3,13 +3,13 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
 
-# Function that get movie recommendations based on the cosine similarity score of movie genres
+# Function that get movie recommendations based on the cosine similarity score of movie genres and their year of release
 
 
 def main():
 
     import json
-    with open("genres.json") as fp:
+    with open("genres_years.json") as fp:
         genres = json.load(fp)
     # print numpy.array(genres)[:10]
     import pandas as pd
@@ -23,7 +23,7 @@ def main():
     indices = pd.Series(movies.index, index=movies[1])
     # print "INDICES-------------------"
     # print indices
-    title = 'Toy Story (1995)'
+    title = 'Taxi Driver (1976)'
     print('Input: ' + title)
     idx = indices[title]
     sim_scores = list(enumerate(cosine_sim[idx]))
