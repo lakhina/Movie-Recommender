@@ -1,11 +1,9 @@
 #include utf-coding8
 import matplotlib.pyplot as plt
-import pandas as pd
-
 import numpy as np
+import pandas as pd
 from sklearn import neighbors
 from sklearn.externals import joblib
-from sklearn.manifold import TSNE
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
@@ -38,17 +36,17 @@ user_info=pd.read_csv('ml-100k/u.user',sep='|',names=col_names1)
 item_info=pd.read_csv('ml-100k/u.item',sep='|',names=col_names2)
 user_info=np.array(user_info)
 item_info=np.array(item_info)
-print"Item info :\n", item_info
+print("Item info :\n", item_info)
 #print user_info.shape
-print "User info :\n",user_info
+print("User info :\n", user_info)
 train_ratings=[]
 train_features=[]
 test_features=[]
 ages=[]
 for i in range (len(user_info)):
     ages.append(user_info[i][1])
-print "Min ages :", np.min(ages)
-print "Max ages :",np.max(ages)
+print("Min ages :", np.min(ages))
+print("Max ages :", np.max(ages))
 
 def transform_ratings(r):
     for i in range (0,len(r)):
@@ -179,7 +177,7 @@ def folds(train_features,test_features):
         #print train_features.shape
     test_features=np.array(test_features)
     test_features=test_features.reshape((len(test_features)/21,21))
-    print "Test features shape :",test_features.shape
+    print("Test features shape :", test_features.shape)
 
 #test ratings given in test files
     ratings=[]
@@ -190,13 +188,6 @@ def folds(train_features,test_features):
     ratings=transform_ratings(ratings)
     return train_features,test_features,ratings,dimension
 
-def plotTSNE():
-    Uniquelabels=['1','2','3','4','5']
-    tsne=TSNE(n_components=2,n_iter=2000)
-    model=tsne.fit_transform(train_data)
-    plt.figure(figsize=(10, 5))
-    plt.scatter(model[:, 0], model[:, 1],c=YNumeric)
-    plt.show()
 
 def calculate(classifier):
     mae1=[]
@@ -259,15 +250,15 @@ def A(train_data,test_data,num):
     for row in test_data.itertuples():
         test_matrix[row[1]-1, row[2]-1]=row[3]#test data matrix
 
-    print "Train Matrix : \n",train_matrix,"\n",train_matrix.shape
+    print("Train Matrix : \n", train_matrix, "\n", train_matrix.shape)
     #train_matrix,test_matrix=normalize_data(train_matrix,test_matrix)
     for i in range(0,943):
         for j in range (0,1682):
             if train_matrix[i][j]!=0:
             #	print i,j
                 train_ratings.append(train_matrix[i][j])
-    print "Train Matrix : \n", train_matrix,"\n",train_matrix.shape
-    print "Len train ratings :",len(train_ratings)
+    print("Train Matrix : \n", train_matrix, "\n", train_matrix.shape)
+    print("Len train ratings :", len(train_ratings))
     #print test_matrix.shape
     return train_matrix,test_matrix,train_ratings
 
@@ -359,18 +350,18 @@ def genre(i):
         # print "in genre \n",train_features.__len__()
 #fold 1 
 train_matrix,test_matrix,ratings_train=A(train2,test2,1)
-print "check 1 ",train_matrix.shape
-print "check 2 ",test_matrix.shape
+print("check 1 ", train_matrix.shape)
+print("check 2 ", test_matrix.shape)
 ratings_train=np.array(ratings_train)
 
-#this function implements the improvised version of gaussian nb 
+# this function implements the improvised version of knn
 ratings_train=transform_ratings(ratings_train)
 train_features,test_features=metadata(train_matrix,test_matrix)
-print "test 1",np.array(train_features).shape
+print("test 1", np.array(train_features).shape)
 train_features,test_features,ratings,dimension=folds(train_features,test_features)
-print "test 2",np.array(train_features).shape
-print type(train_features)
-print dimension
+print("test 2", np.array(train_features).shape)
+print(type(train_features))
+print(dimension)
 import pandas as pd
 df = pd.DataFrame(train_features)
 df.to_csv("train.csv")
@@ -381,8 +372,8 @@ df.to_csv("ratings.csv")
 # df = pd.DataFrame(dimension)
 # df.to_csv("dimension.csv")
 
-print "Train features shape :",train_features.shape
-print "Test features shape :",test_features.shape
+print("Train features shape :", train_features.shape)
+print("Test features shape :", test_features.shape)
 prediction=[]
 
 # classifier=GaussianNB()
@@ -392,9 +383,9 @@ clf=classifier.fit(train_features,ratings_train)
 joblib.dump(clf, 'KNN.pkl')
 pre=clf.predict(test_features)
 
-print "Mean absolute error :",mean_absolute_error(pre,ratings)
+print("Mean absolute error :", mean_absolute_error(pre, ratings))
 
-print "Mean squared error :",mean_squared_error(pre,ratings)
+print("Mean squared error :", mean_squared_error(pre, ratings))
 if dimension == 19:
     calculate(classifier)
 #print mae1,rmse1

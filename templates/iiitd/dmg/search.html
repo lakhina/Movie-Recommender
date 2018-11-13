@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Movie Recommender | {% endblock %}
+
+{% block breadcrumb %}{{ super() }}
+<a class="breadcrumb-item" href="{{ url_for('iiitd') }}">IIIT Delhi</a>
+<a class="breadcrumb-item" href="{{ url_for('dmg') }}">DMG</a>
+<span class="breadcrumb-item active">Movie Recommender</span>
+{% endblock %}
+
+{% block body %}
+<h4 class="display-4 mt-4">Movie Recommender</h4>
+<hr/>
+<div class="row justify-content-center">
+    <form class="col-sm-8" method="POST">
+        <div class="mt-3 form-group">
+            <div class="form-group">
+                <label for="string">Search</label>
+                <input type="text" class="form-control" id="string" name="s"
+                       placeholder="Enter the title of movie / user id for which  you want recommendations"/>
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+</div>
+<br/>
+{% if context %}
+
+
+<hgroup class="mb20">
+    <h1>Search Results</h1>
+    {% if context.res %}
+    <h2 class="lead"><strong class="text-danger">5</strong> results for the search for <strong class="text-danger">{{context.text}}</strong>
+    </h2>
+    {%else%}
+    <h2 class="lead"><strong class="text-danger">5</strong> results for the search for user id <strong
+            class="text-danger">{{context.text}}</strong></h2>
+    {%endif%}
+</hgroup>
+<hr class="mt-1"/>
+
+
+<div class="row">
+    {% if not context.error %}
+    {% if context.res %}
+    <div class="col-xs-6 col-md-6" style="background-color:red;">
+        <h3><a href="#" title="">Content Based Similarity</a></h3>
+
+        <p>{{context.res[0]}}</p>
+        <p>{{context.res[1]}}</p>
+        <p>{{context.res[2]}}</p>
+        <p>{{context.res[3]}}</p>
+        <p>{{context.res[4]}}</p>
+    </div>
+    {% endif %}
+    <!--<span class="clearfix border"></span>-->
+    {% if context.cf_res %}
+    <div class="col-xs-6 col-md-6" style="background-color:lavender;"><h3><a href="#" title="">Item to Item
+        Similarity</a></h3>
+
+        <p>{{context.cf_res[0]}}</p>
+        <p>{{context.cf_res[1]}}</p>
+        <p>{{context.cf_res[2]}}</p>
+        <p>{{context.cf_res[3]}}</p>
+        <p>{{context.cf_res[4]}}</p>
+    </div>
+    {% endif %}
+    {% if context.cf_user %}
+    <div class="col-xs-6 col-md-6" style="background-color:red;">
+        <h3><a href="#" title="">User to User Similarity</a></h3>
+
+        <p>{{context.cf_user[0]}}</p>
+        <p>{{context.cf_user[1]}}</p>
+        <p>{{context.cf_user[2]}}</p>
+        <p>{{context.cf_user[3]}}</p>
+        <p>{{context.cf_user[4]}}</p>
+    </div>
+    {% endif %}
+</div>
+{% else %}
+<p class="warning">{{ context.error }}</p>
+{% endif %}
+</div>
+</div>
+{% endif %}
+
+{% endblock %}
