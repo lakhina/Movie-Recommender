@@ -66,7 +66,9 @@ def getRecommended(user):                                                       
     tempRecommended = set()
     top_5_idx = np.argsort(user_similarity[user])[
                 -6:].tolist()  # getting top 6 similar users, will remove top that is the element itself, and 5 will be returned
+    print (top_5_idx)
     top_5_values = [user_similarity[user][i] for i in top_5_idx]
+    print (top_5_values)
     top_5_idx.reverse()
     top_5_idx.pop(0)
     if flag:

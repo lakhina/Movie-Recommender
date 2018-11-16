@@ -393,15 +393,39 @@ print("Test features shape :", test_features.shape)
 prediction=[]
 
 # classifier=GaussianNB()
-classifier=neighbors.KNeighborsClassifier()
-clf=classifier.fit(train_features,ratings_train)
+classifier=neighbors.KNeighborsClassifier( n_neighbors = 6)
+df1= pd.DataFrame(train_features)
+df2= pd.DataFrame(ratings_train)
+df2 = df2.rename(columns={0: 49})
+result = pd.concat([df1, df2], axis=1, join_axes=[df1.index])
+print "hey2 :",result
+print type(result)
+print type(train_features)
+result=np.array(result)
+print "hey1:",type(result)
+print "shape hey 1:",result.shape
 
+clf=classifier.fit(train_features,ratings_train)
+dist,ind=clf.kneighbors(test_features)
+print("dist \n:",dist)
+print ("ind \n :",ind)
+import json
+newdata=list()
+for line in list(ind):
+     line = list(line)
+     newdata.append(line)
+with open("knn_user_matrix.json","w") as fp:
+    json.dump(list(newdata),fp)
+print ("shape of indices \n:",np.array(ind).shape)
 joblib.dump(clf, 'KNN.pkl')
 pre=clf.predict(test_features)
 
 print("Mean absolute error :", mean_absolute_error(pre, ratings))
 
 print("Mean squared error :", mean_squared_error(pre, ratings))
+from sklearn import metrics
+print("Accuracy:",metrics.accuracy_score( ratings,pre))
+
 if dimension == 19:
     calculate(classifier)
 #print mae1,rmse1

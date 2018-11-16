@@ -6,10 +6,13 @@ from cf import getRecommended
 app = Flask(__name__)
 
 
-def content_based(movie_title):
+def content_based(user):
     import pandas as pd
+    import numpy as np
     from scipy import spatial
+
     debug = False
+    flag = False
     movies_cols = []
     temp_genres = [i for i in range(5, 24)]
     movies_cols += temp_genres
@@ -18,6 +21,13 @@ def content_based(movie_title):
     genre = pd.read_csv('ml-100k/u.item', sep='|', encoding='latin-1', header=None, usecols=movies_cols)
 
     title = pd.read_csv('ml-100k/u.item', sep='|', encoding='latin-1', header=None, usecols=[1])
+    # Reading ratings file:
+    r_cols = ['user_id', 'movie_id', 'rating', 'unix_timestamp']
+    ratings = pd.read_csv('ml-100k/u.data', sep='\t', names=r_cols)
+
+    df = ratings[ratings.rating == 5]
+
+    df = df.groupby('user_id')['movie_id'].apply(list).reset_index(name='movie_ids')
 
     g_shape = genre.shape
     if debug:
@@ -35,14 +45,23 @@ def content_based(movie_title):
     ind = [i for i in range(0, len(titles))]
     indices = pd.Series(ind, index=titles)
     title_by_id = pd.Series(titles, index=ind)
-
-    # movie_title = 'Toy Story (1995)'
-    ind_of_given_title = indices[movie_title]
-    print("-------------------CONTENT BASED ALGORITHM---------------------")
-    print('Movie: ' + movie_title)
-    print("----------------------------------------------------------------")
+    movies_by_user = pd.Series(df.movie_ids.values, index=df.user_id)
     if debug:
-        print(ind_of_given_title)
+        print movies_by_user
+    # movie_title = 'Toy Story (1995)'
+    # user = 1
+    if user in df.user_id.values:
+        movie_ids_selected = movies_by_user[user]
+    else:
+        movie_ids_selected = movies_by_user[1]
+    # print movie_ids_selected
+    ind_of_given_title = movie_ids_selected[0]
+    print("Since the user has rated the movie '", title_by_id[ind_of_given_title], "' as 5 , so we recommend these movies.")
+    print("-------------------CONTENT BASED ALGORITHM---------------------")
+    print('User id: ', user)
+    print("----------------------------------------------------------------")
+    # if debug:
+    #     print(ind_of_given_title)
     genre_of_inp_title = genres[ind_of_given_title]
     cosine_similarity_dict = {}
     for i in range(0, len(titles)):
