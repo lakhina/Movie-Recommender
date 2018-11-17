@@ -154,21 +154,16 @@ def hello():
             cont_g_y=content_genre_year(int(s))
             svd = recommendSVD(int(s), 5)
             if classifiers:
-                from mlp import mlp_knn_recommender
-                knn = mlp_knn_recommender(2, int(s))
+                from mlp import mlp_recommender
+                from KNN import knn_recommender
+                knn = knn_recommender(int(s))
 
-                mlp=mlp_knn_recommender(1,int(s))
+                mlp=mlp_recommender(int(s))
         # else:
         #     r = content_based(s)
         err = len(r)
         print("length :", len(r), len(cf_item), len(cf_user))
-        # if len(r) != 0 and len(cf_item) == 0 and len(cf_user) == 0:
-        #
-        #     context = {
-        #         'text': s,
-        #         'res': r,
-        #
-        #     }
+
         if len(r) != 0 and len(cf_item) != 0 and len(cf_user) != 0:
             context = {
                 'text': s,
@@ -190,39 +185,9 @@ def hello():
                 'error': 'Some error occurred!!!',
             }
 
-        # else:
-        #
-        #     if len(r) ==0 || len():
-        #         context = {
-        #             'error': 'Some error occurred!!!',
-        #         }
-        #     else:
-        #         context = {
-        #             'error': err,
-        #         }
+
         return render_template('iiitd/dmg/search.html', context=context)
     return render_template('iiitd/dmg/search.html')
-
-
-# @app.route('/iiitd/dmg/insult-detection-twitter', methods=['GET', 'POST'])
-# def insult_detection_twitter():
-#     if request.method == 'POST':
-#         s = request.form.get('s')
-#         res = insult_twitter.predict(s)
-#
-#         if res is None:
-#             print('Empty zip')
-#             context = {
-#                 'error': 'Some error occurred!!!',
-#             }
-#         else:
-#             print('wth')
-#             context = {
-#                 'query': s,
-#                 'res': res
-#             }
-#         return render_template('iiitd/dmg/insult_detection_twitter.html', context=context)
-#     return render_template('iiitd/dmg/insult_detection_twitter.html')
 
 
 if __name__ == '__main__':

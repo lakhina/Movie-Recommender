@@ -1,454 +1,446 @@
-#include utf-coding8
+# include utf-coding8
 import matplotlib.pyplot as plt
 import pandas as pd
 
 import numpy as np
-from sklearn import neighbors
 from sklearn.externals import joblib
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
-
-den = 0
-col_names= ['user_id', 'item_id', 'rating', 'timestamp']
-col_names1=['userno','age','gender','occu','timestamp']
-col_names2=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x']
-
-#reading csv file to calculate the unique users and items
-data = pd.read_csv('ml-100k/u.data', sep='\t', names=col_names)          
-users = data.user_id.unique().shape[0]           #no of users
-items = data.item_id.unique().shape[0]           #no of items
-
-#reading the five fold data available 
-traina=pd.read_csv('ml-100k/ua.base',sep='\t',names=col_names)            
-testa=pd.read_csv('ml-100k/ua.test',sep='\t',names=col_names)
-trainb=pd.read_csv('ml-100k/ub.base',sep='\t',names=col_names)            
-testb=pd.read_csv('ml-100k/ub.test',sep='\t',names=col_names)
-train1=pd.read_csv('ml-100k/u1.base',sep='\t',names=col_names)            
-test1=pd.read_csv('ml-100k/u1.test',sep='\t',names=col_names)
-train2=pd.read_csv('ml-100k/u2.base',sep='\t',names=col_names)
-test2=pd.read_csv('ml-100k/u2.test',sep='\t',names=col_names)
-train3=pd.read_csv('ml-100k/u3.base',sep='\t',names=col_names)
-test3=pd.read_csv('ml-100k/u3.test',sep='\t',names=col_names)
-train4=pd.read_csv('ml-100k/u4.base',sep='\t',names=col_names)
-test4=pd.read_csv('ml-100k/u4.test',sep='\t',names=col_names)
-train5=pd.read_csv('ml-100k/u5.base',sep='\t',names=col_names)
-test5=pd.read_csv('ml-100k/u5.test',sep='\t',names=col_names)
-user_info=pd.read_csv('ml-100k/u.user',sep='|',names=col_names1)
-item_info=pd.read_csv('ml-100k/u.item',sep='|',names=col_names2)
-user_info=np.array(user_info)
-item_info=np.array(item_info)
-#print("Item info :\n", item_info)
-##print user_info.shape
-#print("User info :\n", user_info)
-train_ratings=[]
-train_features=[]
-test_features=[]
-ages=[]
-for i in range (len(user_info)):
-    ages.append(user_info[i][1])
-#print("Min ages :", np.min(ages))
-#print("Max ages :", np.max(ages))
-
-def transform_ratings(r):
-    for i in range (0,len(r)):
-        if r[i] > 3:  # ratings greater than 3 is made 2
-            r[i]=2
-        elif r[i] == 3:  # ratings equal to 3 is made 1
-            r[i]=1
-        else :
-            r[i] = 0  # ratings less than 3 is made 0
-    return r
+from sklearn.neural_network import MLPClassifier
 
 
-#extracting item meta data for preparing test data
-def genretest(i):
-    # global den
-    # den+=19
-    for k in range(5, 24):
-        test_features.append( item_info[i][k])
+def knn_recommender(userid):
+    col_names = ['user_id', 'item_id', 'rating', 'timestamp']
+    col_names1 = ['userno', 'age', 'gender', 'occu', 'timestamp']
+    col_names2 = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+                  'u', 'v', 'w', 'x']
 
-#extracting user meta data
-#gender information
-def gendertest(i):
-    # global den
-    # den+=2
-    # males
-    if user_info[i][2]=='M':
-        test_features.extend([1,0])
-    #females
-    else:
-        test_features.extend([0,1])
+    # reading csv file to calculate the unique users and items
+    data = pd.read_csv('ml-100k/u.data', sep='\t', names=col_names, encoding='latin-1')
+    users = data.user_id.unique().shape[0]  # no of users
+    items = data.item_id.unique().shape[0]  # no of items
 
-#age information extraction
-def agetest(i):
-    # global den
-    # den+=7
-    if user_info[i][1] >=7 :
-        if user_info[i][1] <17:
-            test_features.extend([1,0,0,0,0,0,0])
-    if user_info[i][1] >=17:
-        if user_info[i][1] <27:
-            test_features.extend([0,1,0,0,0,0,0])
-
-    if user_info[i][1] >=27:
-        if user_info[i][1] <37:
-            test_features.extend([0,0,1,0,0,0,0])
-
-    if user_info[i][1] >=37:
-        if user_info[i][1] <47:
-            test_features.extend([0,0,0,1,0,0,0])
-
-    if user_info[i][1] >=47:
-        if user_info[i][1] <57:
-            test_features.extend([0,0,0,0,1,0,0])
-
-    if user_info[i][1] >=57:
-        if user_info[i][1] <67:
-            test_features.extend([0,0,0,0,0,1,0])
-
-    if user_info[i][1] >=67 :
-        if user_info[i][1] <77:
-            test_features.extend([0,0,0,0,0,0,1])
-
-#occupation information
-def occupationtest(i):
-    # global den
-    # den += 21
-    if user_info[i][3]=="administrator":
-        test_features.extend([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="artist":
-        test_features.extend([0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="doctor":
-        test_features.extend([0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="educator":
-        test_features.extend([0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="engineer":
-        test_features.extend([0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="entertainment":
-        test_features.extend([1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="executive":
-        test_features.extend([0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="healthcare":
-        test_features.extend([0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="homemaker":
-        test_features.extend([0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="lawyer":
-        test_features.extend([0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="librarian":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="marketing":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="none":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="other":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="programmer":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0])
-    elif user_info[i][3]=="retired":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0])
-    elif user_info[i][3]=="salesman":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0])
-    elif user_info[i][3]=="scientist":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0])
-    elif user_info[i][3]=="student":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0])
-    elif user_info[i][3]=="technician":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0])
-    elif user_info[i][3]=="writer":
-        test_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1])
+    # reading the five fold data available
+    traina = pd.read_csv('ml-100k/ua.base', sep='\t', names=col_names, encoding='latin-1')
+    testa = pd.read_csv('ml-100k/ua.test', sep='\t', names=col_names, encoding='latin-1')
+    trainb = pd.read_csv('ml-100k/ub.base', sep='\t', names=col_names, encoding='latin-1')
+    testb = pd.read_csv('ml-100k/ub.test', sep='\t', names=col_names, encoding='latin-1')
+    train1 = pd.read_csv('ml-100k/u1.base', sep='\t', names=col_names, encoding='latin-1')
+    test1 = pd.read_csv('ml-100k/u1.test', sep='\t', names=col_names, encoding='latin-1')
+    train2 = pd.read_csv('ml-100k/u2.base', sep='\t', names=col_names, encoding='latin-1')
+    test2 = pd.read_csv('ml-100k/u2.test', sep='\t', names=col_names, encoding='latin-1')
+    train3 = pd.read_csv('ml-100k/u3.base', sep='\t', names=col_names, encoding='latin-1')
+    test3 = pd.read_csv('ml-100k/u3.test', sep='\t', names=col_names, encoding='latin-1')
+    train4 = pd.read_csv('ml-100k/u4.base', sep='\t', names=col_names, encoding='latin-1')
+    test4 = pd.read_csv('ml-100k/u4.test', sep='\t', names=col_names, encoding='latin-1')
+    train5 = pd.read_csv('ml-100k/u5.base', sep='\t', names=col_names, encoding='latin-1')
+    test5 = pd.read_csv('ml-100k/u5.test', sep='\t', names=col_names, encoding='latin-1')
+    user_info = pd.read_csv('ml-100k/u.user', sep='|', names=col_names1, encoding='latin-1')
+    item_info = pd.read_csv('ml-100k/u.item', sep='|', names=col_names2, encoding='latin-1')
+    user_info = np.array(user_info)
+    item_info = np.array(item_info)
+    # print (item_info)
 
 
-def confmatrix(c_matrix, ratings):
+    '''
+    0
+    1 age
+    2 gender
+    3 occu
 
-    normalize=False
-    length = np.arange(len(ratings))
-    plt.imshow(c_matrix, cmap=plt.cm.Blues)
-    plt.title('Confusion matrix')
-    #print ("Confusion matrix :",c_matrix)
-    plt.xticks(length, ratings)
-    plt.yticks(length, ratings)
-    plt.xlabel('Predicted labels')
-    plt.ylabel('Observed labels')
-    plt.show()
 
-def fitting(m1,m2,samples):
-    plt.plot(samples,m1,label='testing set')
-    plt.plot(samples,m2,label='training set')
-    plt.title("overfitting/underfitting")
-    plt.legend()
-    plt.show()
 
-#preparing the data 
-def folds(train_features,test_features):
-    #print len(train_features)
-    train_features = np.array(train_features)
+
+    '''
+
+    ##print user_info.shape
+    # print (user_info)
+    train_ratings = []
+    train_features = []
+    test_features = []
+    ages = []
+
+    ratings = []
+    for i in range(len(user_info)):
+        ages.append(user_info[i][1])
+
+    # print (np.min(ages))
+    # print (np.max(ages))
+
+    def transform_ratings(r):
+        for i in range(0, len(r)):
+            if r[i] > 3:
+                r[i] = 3
+            elif r[i] == 3:
+                r[i] = 2
+            else:
+                r[i] = 1
+        return r
+
+    # extracting item meta data for preparing test data
+    def genretest(i, count):
+        for k in range(5, 24):
+            test_features[count].append(item_info[i][k])
+
+    # extracting user meta data
+    # gender information
+    def gendertest(i, count):
+        # males
+        if user_info[i][2] == 'M':
+            test_features[count].extend([1, 0])
+        # females
+        else:
+            test_features[count].extend([0, 1])
+
+    # age information extraction
+    def agetest(i, count):
+        if user_info[i][1] >= 7:
+            if user_info[i][1] <= 12:
+                test_features[count].extend([1, 0, 0, 0, 0, 0, 0])
+        if user_info[i][1] >= 12:
+            if user_info[i][1] <= 19:
+                test_features[count].extend([0, 1, 0, 0, 0, 0, 0])
+
+        if user_info[i][1] >= 20:
+            if user_info[i][1] <= 30:
+                test_features[count].extend([0, 0, 1, 0, 0, 0, 0])
+
+        if user_info[i][1] >= 31:
+            if user_info[i][1] <= 40:
+                test_features[count].extend([0, 0, 0, 1, 0, 0, 0])
+
+        if user_info[i][1] >= 41:
+            if user_info[i][1] <= 50:
+                test_features[count].extend([0, 0, 0, 0, 1, 0, 0])
+
+        if user_info[i][1] >= 51:
+            if user_info[i][1] <= 60:
+                test_features[count].extend([0, 0, 0, 0, 0, 1, 0])
+
+        if user_info[i][1] >= 61:
+            if user_info[i][1] <= 77:
+                test_features[count].extend([0, 0, 0, 0, 0, 0, 1])
+
+    # occupation information
+    def occupationtest(i, count):
+        if user_info[i][3] == "administrator":
+            test_features[count].extend([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "artist":
+            test_features[count].extend([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "doctor":
+            test_features[count].extend([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "educator":
+            test_features[count].extend([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "engineer":
+            test_features[count].extend([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "entertainment":
+            test_features[count].extend([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "executive":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "healthcare":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "homemaker":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "lawyer":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "librarian":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "marketing":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "none":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "other":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "programmer":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "retired":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "salesman":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0])
+        elif user_info[i][3] == "scientist":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0])
+        elif user_info[i][3] == "student":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])
+        elif user_info[i][3] == "technician":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0])
+        elif user_info[i][3] == "writer":
+            test_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+
+    # test ratings given in test files
+    ratings = []
+
+    # preparing meta data to be fed as input
+    def metadata(train_matrix, test_matrix):
+        ratings_train = []
+        ratings = []
+        count = 0
+        for i in range(0, 943):
+            for j in range(0, 1682):
+                if train_matrix[i][j] != 0:
+                    train_features.append([])
+                    gender(i, count)
+                    occupation(i, count)
+                    age(i, count)
+                    genre(j, count)
+                    ratings_train.append(int(train_matrix[i][j]))
+                    count += 1
+        count = 0
+        for i in range(0, 943):
+            for j in range(0, 1682):
+                if test_matrix[i][j] != 0:
+                    test_features.append([])
+                    gendertest(i, count)
+                    occupationtest(i, count)
+                    agetest(i, count)
+                    genretest(j, count)
+                    ratings.append(int(test_matrix[i][j]))
+                    count += 1
+
+        '''     
+        tm=train_matrix.T
+        for i in range (0,1682):
+            for j in range(0,943):
+                if tm[i][j]!=0:
+                    genre(i)
+        '''
         ##print len(train_features)
-    # den=train_features.shape
-    den = 49  # change to 21 for only genres and gender
-    #print den, train_features.size
-    dimension = len(train_features) / den
+        '''
+        for i in range (0,943):
+            for j in range(0,1682):
+                if test_matrix[i][j]!=0:
+                    gendertest(i)
+                    #occupationtest(i)
+                    #agetest(i)
 
-    train_features = train_features.reshape((dimension, den))
-    ##print train_features.shape
-    test_features=np.array(test_features)
-    test_features=test_features.reshape((len(test_features) / den, den))
-    #print("Test features shape :", test_features.shape)
+        #in order to append item features
+        tesm=test_matrix.T
+        for i in range (0,1682):
+            for j in range(0,943):
+                if tesm[i][j]!=0:
+                    genretest(i)
+         '''
+        return train_features, test_features, ratings_train, ratings
 
-#test ratings given in test files
-    ratings=[]
-    for i in range(0,943):
-        for j in range (0,1682):
-            if test_matrix[i][j]!=0:
-                ratings.append(test_matrix[i][j])
-    ratings=transform_ratings(ratings)
-    return train_features,test_features,ratings,dimension
+    # constructing the test and train matrix
 
+    def A(train_data, test_data, num):
+        train_matrix = np.zeros((users, items))
+        test_matrix = np.zeros((users, items))
 
-def calculate(classifier):
-    mae1=[]
-    mae2=[]
-    num_samples=[80000,82500,85000,88000,90569]
+        for row in train_data.itertuples():  # user-item matrix provided with the corresponding ratings
+            train_matrix[row[1] - 1, row[2] - 1] = row[3]  # train data matrix accessing rowwise
+        for row in test_data.itertuples():
+            test_matrix[row[1] - 1, row[2] - 1] = row[3]  # test data matrix
+        # print (train_matrix)
+        # train_matrix,test_matrix=normalize_data(train_matrix,test_matrix)
+        for i in range(0, 943):
+            for j in range(0, 1682):
+                if train_matrix[i][j] != 0:
+                    #	#print (i,j)
+                    train_ratings.append(train_matrix[i][j])
+        # print (train_matrix)
+        # print (len(train_ratings))
+        ##print test_matrix.shape
+        return train_matrix, test_matrix, train_ratings
 
-    for n in num_samples:
-        model=classifier.fit(train_features[n:,:],ratings_train[n:])
-        pred1=model.predict(test_features)
-        pred2=model.predict(train_features)
-        mae1.append(mean_absolute_error(pred1,ratings))
-        mae2.append(mean_absolute_error(pred2,ratings_train))
+    def gender(i, count):
+        if user_info[i][2] == 'M':
+            train_features[count].extend([1, 0])
 
-    fitting(mae1,mae2,num_samples)
+        else:
+            train_features[count].extend([0, 1])
 
+    def age(i, count):
+        if user_info[i][1] >= 7:
+            if user_info[i][1] <= 12:
+                train_features[count].extend([1, 0, 0, 0, 0, 0, 0])
+        if user_info[i][1] >= 12:
+            if user_info[i][1] <= 19:
+                train_features[count].extend([0, 1, 0, 0, 0, 0, 0])
 
-#preparing meta data to be fed as input
-def metadata(train_matrix,test_matrix):
+        if user_info[i][1] >= 20:
+            if user_info[i][1] <= 30:
+                train_features[count].extend([0, 0, 1, 0, 0, 0, 0])
 
-    for i in range (0,943):
-        for j in range(0,1682):
-            if train_matrix[i][j] !=0:
-                gender(i)
-                occupation(i)
-                age(i)
-    # #print count1
+        if user_info[i][1] >= 31:
+            if user_info[i][1] <= 40:
+                train_features[count].extend([0, 0, 0, 1, 0, 0, 0])
 
-    tm=train_matrix.T
-    for i in range (0,1682):
-        for j in range(0,943):
-            if tm[i][j]!=0:
-                genre(i)
-       
-    ##print len(train_features)
+        if user_info[i][1] >= 41:
+            if user_info[i][1] <= 50:
+                train_features[count].extend([0, 0, 0, 0, 1, 0, 0])
 
-    for i in range (0,943):
-        for j in range(0,1682):
-            if test_matrix[i][j]!=0:
-                gendertest(i)
-                occupationtest(i)
-                agetest(i)
+        if user_info[i][1] >= 51:
+            if user_info[i][1] <= 60:
+                train_features[count].extend([0, 0, 0, 0, 0, 1, 0])
 
-    #in order to append item features
-    tesm=test_matrix.T
-    for i in range (0,1682):
-        for j in range(0,943):
-            if tesm[i][j]!=0:
-                genretest(i)
+        if user_info[i][1] >= 61:
+            if user_info[i][1] <= 77:
+                train_features[count].extend([0, 0, 0, 0, 0, 0, 1])
 
-    return train_features,test_features
+    # occupation information
 
-#constructing the test and train matrix
+    # extracted from u.user
+    def occupation(i, count):
+        if user_info[i][3] == "administrator":
+            train_features[count].extend([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "artist":
+            train_features[count].extend([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "doctor":
+            train_features[count].extend([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "educator":
+            train_features[count].extend([0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "engineer":
+            train_features[count].extend([0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "entertainment":
+            train_features[count].extend([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "executive":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "healthcare":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "homemaker":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "lawyer":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "librarian":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "marketing":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "none":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "other":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "programmer":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "retired":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0])
+        elif user_info[i][3] == "salesman":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0])
+        elif user_info[i][3] == "scientist":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0])
+        elif user_info[i][3] == "student":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])
+        elif user_info[i][3] == "technician":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0])
+        elif user_info[i][3] == "writer":
+            train_features[count].extend([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
 
-def A(train_data,test_data,num):
-    train_matrix = np.zeros((users, items))
-    test_matrix=np.zeros((users,items))
+    def genre(i, count):
+        for k in range(5, 24):
+            train_features[count].append(item_info[i][k])
 
-    for row in train_data.itertuples(): #user-item matrix provided with the corresponding ratings
-        train_matrix[row[1]-1, row[2]-1] = row[3]     #train data matrix accessing rowwise
-    for row in test_data.itertuples():
-        test_matrix[row[1]-1, row[2]-1]=row[3]#test data matrix
+    # fold 1
+    if True:
+        train_matrix, test_matrix, ratings_train = A(train2, test2, 1)
+        ratings_train = np.array(ratings_train)
 
-    #print("Train Matrix : \n", train_matrix, "\n", train_matrix.shape)
-    #train_matrix,test_matrix=normalize_data(train_matrix,test_matrix)
-    for i in range(0,943):
-        for j in range (0,1682):
-            if train_matrix[i][j]!=0:
-            #	#print i,j
-                train_ratings.append(train_matrix[i][j])
-    #print("Train Matrix : \n", train_matrix, "\n", train_matrix.shape)
-    #print("Len train ratings :", len(train_ratings))
-    ##print test_matrix.shape
-    return train_matrix,test_matrix,train_ratings
+        for i in range(0, 943):
+            for j in range(0, 1682):
+                if test_matrix[i][j] != 0:
+                    ratings.append(int(test_matrix[i][j]))
+                    # ratings=transform_ratings(ratings)
 
-def gender(i):
-    if user_info[i][2]=='M':
-        train_features.extend([1,0])
+        # this function implements the improvised version of gaussian nb
+        # ratings_train=transform_ratings(ratings_train)
+        # print ((train_features))
+        train_features, test_features, ratings_train, ratings = metadata(train_matrix, test_matrix)
+        # train_features,test_features,ratings,dimension=folds(train_features,test_features)
+        train_features = np.asarray(train_features)
+        # print (train_features)
+        test_features = np.asarray(test_features)
+        # print (test_features.shape)
+        # print (test_features)
+        ##print ("-- ",np.asarray(test_features).shape)
+        # print (" --- ",ratings_train)
+        '''
+        temp=ratings_train
+        ratings_train=[]
+        for i in range(0,len(temp)):
+            tp=[]
+            tp.append(temp[i])
+            ratings_train.append(tp)
 
-    else:
-        train_features.extend([0,1])
+        '''
+        # print (" --- ",ratings_train)
 
-def age(i):
-    if user_info[i][1] >=7 :
-        if user_info[i][1] <17:
-            train_features.extend([1,0,0,0,0,0,0])
-    if user_info[i][1] >=17:
-        if user_info[i][1] <27:
-            train_features.extend([0,1,0,0,0,0,0])
+        prediction = []
+        prediction = []
+        ##print ((train_features))
 
-    if user_info[i][1] >=27:
-        if user_info[i][1] <37:
-            train_features.extend([0,0,1,0,0,0,0])
+        ratings = transform_ratings(ratings)
+        ratings_train = transform_ratings(ratings_train)
 
-    if user_info[i][1] >=37:
-        if user_info[i][1] <47:
-            train_features.extend([0,0,0,1,0,0,0])
+        # gnb = svm.SVC()
+        from sklearn.neighbors import KNeighborsClassifier
 
-    if user_info[i][1] >=47:
-        if user_info[i][1] <57:
-            train_features.extend([0,0,0,0,1,0,0])
+        gnb = KNeighborsClassifier(n_neighbors=3)
+        clf = gnb.fit(train_features, ratings_train)
+        joblib.dump(clf, 'knn.pkl')
+        pre = clf.predict(test_features)
 
-    if user_info[i][1] >=57:
-        if user_info[i][1] <67:
-            train_features.extend([0,0,0,0,0,1,0])
-
-    if user_info[i][1] >=67 :
-        if user_info[i][1] <77:
-            train_features.extend([0,0,0,0,0,0,1])
-
-
-
-#extracted from u.user
-def occupation(i):
-    if user_info[i][3]=="administrator":
-        train_features.extend([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="artist":
-        train_features.extend([0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="doctor":
-        train_features.extend([0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="educator":
-        train_features.extend([0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="engineer":
-        train_features.extend([0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="entertainment":
-        train_features.extend([1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="executive":
-        train_features.extend([0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="healthcare":
-        train_features.extend([0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="homemaker":
-        train_features.extend([0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="lawyer":
-        train_features.extend([0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="librarian":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="marketing":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="none":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="other":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0])
-    elif user_info[i][3]=="programmer":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0])
-    elif user_info[i][3]=="retired":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0])
-    elif user_info[i][3]=="salesman":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0])
-    elif user_info[i][3]=="scientist":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0])
-    elif user_info[i][3]=="student":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0])
-    elif user_info[i][3]=="technician":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0])
-    elif user_info[i][3]=="writer":
-        train_features.extend([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1])
-
-def genre(i):
-    for k in range (5,24):
-        train_features.append( item_info[i][k])
-        # #print "in genre \n",train_features.__len__()
-#fold 1 
-train_matrix,test_matrix,ratings_train=A(train2,test2,1)
-#print("check 1 ", train_matrix.shape)
-#print("check 2 ", test_matrix.shape)
-ratings_train=np.array(ratings_train)
-
-# this function implements the improvised version of knn
-ratings_train=transform_ratings(ratings_train)
-train_features,test_features=metadata(train_matrix,test_matrix)
-#print("test 1", np.array(train_features).shape)
-train_features,test_features,ratings,dimension=folds(train_features,test_features)
-#print("test 2", np.array(train_features).shape)
-#print(type(train_features))
-#print(dimension)
-import pandas as pd
-df = pd.DataFrame(train_features)
-df.to_csv("train.csv")
-df = pd.DataFrame(test_features)
-df.to_csv("test.csv")
-df = pd.DataFrame(ratings)
-df.to_csv("ratings.csv")
-# df = pd.DataFrame(dimension)
-# df.to_csv("dimension.csv")
-
-#print("Train features shape :", train_features.shape)
-#print("Test features shape :", test_features.shape)
-prediction=[]
-
-# classifier=GaussianNB()
-classifier=neighbors.KNeighborsClassifier( n_neighbors = 6)
-df1= pd.DataFrame(train_features)
-df2= pd.DataFrame(ratings_train)
-df2 = df2.rename(columns={0: 49})
-result = pd.concat([df1, df2], axis=1, join_axes=[df1.index])
-#print "hey2 :",result
-#print type(result)
-#print type(train_features)
-result=np.array(result)
-#print "hey1:",type(result)
-#print "shape hey 1:",result.shape
-
-clf=classifier.fit(train_features,ratings_train)
-dist,ind=clf.kneighbors(test_features)
-#print("dist \n:",dist)
-#print ("ind \n :",ind)
-import json
-newdata=list()
-for line in list(ind):
-     line = list(line)
-     newdata.append(line)
-with open("knn_user_matrix.json","w") as fp:
-    json.dump(list(newdata),fp)
-#print ("shape of indices \n:",np.array(ind).shape)
-joblib.dump(clf, 'KNN.pkl')
-pre=clf.predict(test_features)
-
-print("Mean absolute error :", mean_absolute_error(pre, ratings))
-
-print("Mean squared error :", mean_squared_error(pre, ratings))
-from sklearn import metrics
-print("Accuracy:",metrics.accuracy_score( ratings,pre))
-
-if dimension == 19:
-    calculate(classifier)
-##print mae1,rmse1
-##print mae2,rmse2
-cnf_matrix=confusion_matrix(pre,ratings)
-# Plot non-normalized confusion matrix
-plt.figure()
-#if ratings are not transformed classes=[1,2,3,4,5]
-cl1=[1,2,3]
-cl2=[1,2,3,4,5]
-confmatrix(cnf_matrix, cl1)
+        # sklearn.metrics.mean_squared_error
 
 
+        print("MAE :", mean_absolute_error(pre, ratings))
+        print("RMSE :", mean_squared_error(ratings, pre))
+
+        from sklearn.metrics import accuracy_score
+
+        print("Accuracy : ", accuracy_score(ratings, pre))
+
+        cnf_matrix = confusion_matrix(pre, ratings)
+        # Plot non-normalized confusion matrix
+        plt.figure()
+        # if ratings are not transformed classes=[1,2,3,4,5]
 
 
+        # RECOMMENDATION
+
+        # userid=6
 
 
+        test_features = []
+        i = userid
+        for j in range(0, 1682):
+            count = j
+            ##print (" ----- ",count)
+            test_features.append([])
+            ##print (type(test_features[0]))
+            gendertest(i, count)
+            occupationtest(i, count)
+            agetest(i, count)
+            genretest(j, count)
+
+        result = []
+        result = clf.predict(test_features)
+        # print (result)
+        # print (result.shape)
+        final = np.asarray(result)
+        recommended = final.argsort()[-5:][::-1]
+
+        # test_features=[]
 
 
+        title = pd.read_csv('ml-100k/u.item', sep='|', encoding='latin-1', header=None, usecols=[1])
+        titles = title[1]
+        ind = [i for i in range(0, len(titles))]
+        indices = pd.Series(ind, index=titles)
+        title_by_id = pd.Series(titles, index=ind)
 
+        top_selected_movie_ids = recommended
+        # print(top_selected_movie_ids)
+        result = []
+        for id in top_selected_movie_ids:
+            # #print(title_by_id[id])
+            result.append(title_by_id[id])
+        # print (result)
+        return result
 
-
-
-
-
-
+# KNN
+print "KNN :"
+userid = 6
+movie_titles = knn_recommender(userid)
+for m in movie_titles:
+    print m
+print "------------------------------------------"
