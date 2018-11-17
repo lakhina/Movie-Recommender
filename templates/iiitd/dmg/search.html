@@ -16,7 +16,7 @@
             <div class="form-group">
                 <label for="string">Search</label>
                 <input type="text" class="form-control" id="string" name="s"
-                       placeholder="Enter the title of movie / user id for which  you want recommendations"/>
+                       placeholder="Enter the user id for which  you want recommendations"/>
             </div>
             <button type="submit" class="btn btn-primary">Search</button>
         </div>
@@ -29,7 +29,7 @@
 <hgroup class="mb20">
     <h1>Search Results</h1>
     {% if context.res %}
-    <h2 class="lead"><strong class="text-danger">5</strong> results for the search for <strong class="text-danger">{{context.text}}</strong>
+    <h2 class="lead"><strong class="text-danger">5</strong> results for the search for user id <strong class="text-danger">{{context.text}}</strong>
     </h2>
     {%else%}
     <h2 class="lead"><strong class="text-danger">5</strong> results for the search for user id <strong
@@ -39,11 +39,20 @@
 <hr class="mt-1"/>
 
 
-<div class="row">
+
     {% if not context.error %}
     {% if context.res %}
-    <div class="col-xs-6 col-md-6" style="background-color:red;">
-        <h3><a href="#" title="">Content Based Similarity</a></h3>
+<div class="row">
+    <center>
+     <h3  align ="center" style="color:red">Content Based Similarity</h3>
+
+    </center>
+</div>
+<div class="row">
+    <!--<div class="col-xs-12 col-sm-12 col-md-7">-->
+    <!--<div class="col-xs-6 col-md-6">-->
+    <div class="col-md-6 col-md-border">
+        <h5 style="color:blue">On the basis of Genres</h5>
 
         <p>{{context.res[0]}}</p>
         <p>{{context.res[1]}}</p>
@@ -51,11 +60,43 @@
         <p>{{context.res[3]}}</p>
         <p>{{context.res[4]}}</p>
     </div>
+
+
+    <!--<span class="clearfix border"></span>-->
+    <!--<div class="col-xs-6 col-md-6">-->
+
+    <div class="col-md-6 col-md-border">
+    <!--<div class="col-xs-12 col-sm-12 col-md-7">-->
+        <h5 style="color:blue">On the basis of Genres and Year of Movie Release</h5>
+
+        <p>{{context.cont[0]}}</p>
+        <p>{{context.cont[1]}}</p>
+        <p>{{context.cont[2]}}</p>
+        <p>{{context.cont[3]}}</p>
+        <p>{{context.cont[4]}}</p>
+    </div>
+</div>
+    <hr class="mt-1"/>
+
     {% endif %}
+
     <!--<span class="clearfix border"></span>-->
     {% if context.cf_res %}
-    <div class="col-xs-6 col-md-6" style="background-color:lavender;"><h3><a href="#" title="">Item to Item
-        Similarity</a></h3>
+    <div class="row">
+        <center>
+    <h3 style="color:red">Collaborative Filtering</h3>
+    <br>
+        </center></div>
+<div class="row">
+        <center>
+    <h5 style="color:blue">User-Item Correlation</h5>
+    <br>
+        </center></div>
+    <div class="row">
+            <!--<div class="col-xs-12 col-sm-12 col-md-7">-->
+    <div class="col-xs-6 col-md-6">
+        <h5 style="color:darkblue">Item to Item
+        Similarity</h5>
 
         <p>{{context.cf_res[0]}}</p>
         <p>{{context.cf_res[1]}}</p>
@@ -63,16 +104,70 @@
         <p>{{context.cf_res[3]}}</p>
         <p>{{context.cf_res[4]}}</p>
     </div>
+
     {% endif %}
     {% if context.cf_user %}
-    <div class="col-xs-6 col-md-6" style="background-color:red;">
-        <h3><a href="#" title="">User to User Similarity</a></h3>
+
+    <div class="col-xs-6 col-md-6">
+<!--<div class="col-xs-12 col-sm-12 col-md-7">-->
+    <h5 style="color:darkblue">User to User Similarity</h5>
 
         <p>{{context.cf_user[0]}}</p>
         <p>{{context.cf_user[1]}}</p>
         <p>{{context.cf_user[2]}}</p>
         <p>{{context.cf_user[3]}}</p>
         <p>{{context.cf_user[4]}}</p>
+    </div>
+    </div>
+ <hr class="mt-1"/>
+    {% endif %}
+    {% if context.svd %}
+<div class="row">
+    <center>
+     <h5 style="color:blue">Using Classifiers</h5>
+    </center>
+</div>
+    <div class="row">
+        <!--<div class="col-xs-12 col-sm-12 col-md-7">-->
+    <div class="col-xs-6 col-md-6">
+        <h5 style="color:darkblue">SVD</h5>
+
+        <p>{{context.svd[0]}}</p>
+        <p>{{context.svd[1]}}</p>
+        <p>{{context.svd[2]}}</p>
+        <p>{{context.svd[3]}}</p>
+        <p>{{context.svd[4]}}</p>
+    </div>
+    </div>
+    {% endif %}
+    {% if context.knn %}
+<hr class="mt-1"/>
+    <div class="row">
+<!--<div class="col-xs-12 col-sm-12 col-md-7">-->
+    <div class="col-xs-6 col-md-6" >
+        <h5 style="color:darkblue">KNN</h5>
+
+        <p>{{context.knn[0]}}</p>
+        <p>{{context.knn[1]}}</p>
+        <p>{{context.knn[2]}}</p>
+        <p>{{context.knn[3]}}</p>
+        <p>{{context.knn[4]}}</p>
+    </div>
+    <!--</div>-->
+    {% endif %}
+    {% if context.mlp %}
+    <!--<hr class="mt-1"/>-->
+    <!--<div class="row">-->
+    <div class="col-xs-6 col-md-6" >
+    <!--<div class="col-xs-12 col-sm-12 col-md-7">-->
+         <h5 style="color:darkblue">Neural Network</h5>
+
+        <p>{{context.mlp[0]}}</p>
+        <p>{{context.mlp[1]}}</p>
+        <p>{{context.mlp[2]}}</p>
+        <p>{{context.mlp[3]}}</p>
+        <p>{{context.mlp[4]}}</p>
+    </div>
     </div>
     {% endif %}
 </div>

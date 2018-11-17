@@ -38,17 +38,17 @@ user_info=pd.read_csv('ml-100k/u.user',sep='|',names=col_names1)
 item_info=pd.read_csv('ml-100k/u.item',sep='|',names=col_names2)
 user_info=np.array(user_info)
 item_info=np.array(item_info)
-print("Item info :\n", item_info)
-#print user_info.shape
-print("User info :\n", user_info)
+#print("Item info :\n", item_info)
+##print user_info.shape
+#print("User info :\n", user_info)
 train_ratings=[]
 train_features=[]
 test_features=[]
 ages=[]
 for i in range (len(user_info)):
     ages.append(user_info[i][1])
-print("Min ages :", np.min(ages))
-print("Max ages :", np.max(ages))
+#print("Min ages :", np.min(ages))
+#print("Max ages :", np.max(ages))
 
 def transform_ratings(r):
     for i in range (0,len(r)):
@@ -165,7 +165,7 @@ def confmatrix(c_matrix, ratings):
     length = np.arange(len(ratings))
     plt.imshow(c_matrix, cmap=plt.cm.Blues)
     plt.title('Confusion matrix')
-    print ("Confusion matrix :",c_matrix)
+    #print ("Confusion matrix :",c_matrix)
     plt.xticks(length, ratings)
     plt.yticks(length, ratings)
     plt.xlabel('Predicted labels')
@@ -181,19 +181,19 @@ def fitting(m1,m2,samples):
 
 #preparing the data 
 def folds(train_features,test_features):
-    print len(train_features)
+    #print len(train_features)
     train_features = np.array(train_features)
-        #print len(train_features)
+        ##print len(train_features)
     # den=train_features.shape
     den = 49  # change to 21 for only genres and gender
-    print den, train_features.size
+    #print den, train_features.size
     dimension = len(train_features) / den
 
     train_features = train_features.reshape((dimension, den))
-    #print train_features.shape
+    ##print train_features.shape
     test_features=np.array(test_features)
     test_features=test_features.reshape((len(test_features) / den, den))
-    print("Test features shape :", test_features.shape)
+    #print("Test features shape :", test_features.shape)
 
 #test ratings given in test files
     ratings=[]
@@ -229,7 +229,7 @@ def metadata(train_matrix,test_matrix):
                 gender(i)
                 occupation(i)
                 age(i)
-    # print count1
+    # #print count1
 
     tm=train_matrix.T
     for i in range (0,1682):
@@ -237,7 +237,7 @@ def metadata(train_matrix,test_matrix):
             if tm[i][j]!=0:
                 genre(i)
        
-    #print len(train_features)
+    ##print len(train_features)
 
     for i in range (0,943):
         for j in range(0,1682):
@@ -266,16 +266,16 @@ def A(train_data,test_data,num):
     for row in test_data.itertuples():
         test_matrix[row[1]-1, row[2]-1]=row[3]#test data matrix
 
-    print("Train Matrix : \n", train_matrix, "\n", train_matrix.shape)
+    #print("Train Matrix : \n", train_matrix, "\n", train_matrix.shape)
     #train_matrix,test_matrix=normalize_data(train_matrix,test_matrix)
     for i in range(0,943):
         for j in range (0,1682):
             if train_matrix[i][j]!=0:
-            #	print i,j
+            #	#print i,j
                 train_ratings.append(train_matrix[i][j])
-    print("Train Matrix : \n", train_matrix, "\n", train_matrix.shape)
-    print("Len train ratings :", len(train_ratings))
-    #print test_matrix.shape
+    #print("Train Matrix : \n", train_matrix, "\n", train_matrix.shape)
+    #print("Len train ratings :", len(train_ratings))
+    ##print test_matrix.shape
     return train_matrix,test_matrix,train_ratings
 
 def gender(i):
@@ -363,21 +363,21 @@ def occupation(i):
 def genre(i):
     for k in range (5,24):
         train_features.append( item_info[i][k])
-        # print "in genre \n",train_features.__len__()
+        # #print "in genre \n",train_features.__len__()
 #fold 1 
 train_matrix,test_matrix,ratings_train=A(train2,test2,1)
-print("check 1 ", train_matrix.shape)
-print("check 2 ", test_matrix.shape)
+#print("check 1 ", train_matrix.shape)
+#print("check 2 ", test_matrix.shape)
 ratings_train=np.array(ratings_train)
 
 # this function implements the improvised version of knn
 ratings_train=transform_ratings(ratings_train)
 train_features,test_features=metadata(train_matrix,test_matrix)
-print("test 1", np.array(train_features).shape)
+#print("test 1", np.array(train_features).shape)
 train_features,test_features,ratings,dimension=folds(train_features,test_features)
-print("test 2", np.array(train_features).shape)
-print(type(train_features))
-print(dimension)
+#print("test 2", np.array(train_features).shape)
+#print(type(train_features))
+#print(dimension)
 import pandas as pd
 df = pd.DataFrame(train_features)
 df.to_csv("train.csv")
@@ -388,8 +388,8 @@ df.to_csv("ratings.csv")
 # df = pd.DataFrame(dimension)
 # df.to_csv("dimension.csv")
 
-print("Train features shape :", train_features.shape)
-print("Test features shape :", test_features.shape)
+#print("Train features shape :", train_features.shape)
+#print("Test features shape :", test_features.shape)
 prediction=[]
 
 # classifier=GaussianNB()
@@ -398,17 +398,17 @@ df1= pd.DataFrame(train_features)
 df2= pd.DataFrame(ratings_train)
 df2 = df2.rename(columns={0: 49})
 result = pd.concat([df1, df2], axis=1, join_axes=[df1.index])
-print "hey2 :",result
-print type(result)
-print type(train_features)
+#print "hey2 :",result
+#print type(result)
+#print type(train_features)
 result=np.array(result)
-print "hey1:",type(result)
-print "shape hey 1:",result.shape
+#print "hey1:",type(result)
+#print "shape hey 1:",result.shape
 
 clf=classifier.fit(train_features,ratings_train)
 dist,ind=clf.kneighbors(test_features)
-print("dist \n:",dist)
-print ("ind \n :",ind)
+#print("dist \n:",dist)
+#print ("ind \n :",ind)
 import json
 newdata=list()
 for line in list(ind):
@@ -416,7 +416,7 @@ for line in list(ind):
      newdata.append(line)
 with open("knn_user_matrix.json","w") as fp:
     json.dump(list(newdata),fp)
-print ("shape of indices \n:",np.array(ind).shape)
+#print ("shape of indices \n:",np.array(ind).shape)
 joblib.dump(clf, 'KNN.pkl')
 pre=clf.predict(test_features)
 
@@ -428,8 +428,8 @@ print("Accuracy:",metrics.accuracy_score( ratings,pre))
 
 if dimension == 19:
     calculate(classifier)
-#print mae1,rmse1
-#print mae2,rmse2
+##print mae1,rmse1
+##print mae2,rmse2
 cnf_matrix=confusion_matrix(pre,ratings)
 # Plot non-normalized confusion matrix
 plt.figure()

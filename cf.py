@@ -279,15 +279,16 @@ def getRecommendation(user):                                # using item item si
 
 print("---------------------Collaborative Filtering---------------------------------------")
 print()
+print("User id :", 4)
 print("-------------------Item to Item Similarity Based Recommendation------------------- ")
-print("Movie :", title_by_id[4])
+
 top_selected_movie_ids, rec_mov_titles = getRecommendation(4)
 print("****************Movie Recommendations :************************")
 for id in top_selected_movie_ids:
     print(title_by_id[id])
 print("-----------------------------------------------------------------------------------")
 print("-------------------User to User Similarity Based Recommendation-------------------")
-print("User id :", 4)
+
 top_selected_movie_ids, rec_mov_titles = getRecommended(4)
 print("****************Movie Recommendations :************************")
 for id in top_selected_movie_ids:

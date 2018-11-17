@@ -3,7 +3,52 @@ from flask import Flask, render_template, request
 from cf import getRecommendation
 from cf import getRecommended
 
+from ContentBased_CosineSimilarity import content_genre_year
 app = Flask(__name__)
+import numpy as np
+
+
+def last(n):
+    return n[-1]
+
+
+def recommendSVD(userID, count):
+    user = userID - 1
+    import pandas as pd
+    title = pd.read_csv('ml-100k/u.item', sep='|', encoding='latin-1', header=None, usecols=[1])
+    titles = title[1]
+    ind = [i for i in range(0, len(titles))]
+    indices = pd.Series(ind, index=titles)
+    title_by_id = pd.Series(titles, index=ind)
+    AlreadymovieList = []
+    pred = np.loadtxt('modelSVD1', delimiter=',')
+    train_rows = np.loadtxt('modelSVD2', delimiter=',')
+    train_cols = np.loadtxt('modelSVD3', delimiter=',')
+    userRatings = pred[user]
+    for idx, val in enumerate(train_rows):
+        if val == user:
+            AlreadymovieList.append(train_cols[idx])
+    Movie_Ratgs = []
+    for idx, val in enumerate(userRatings):
+        if not (idx in AlreadymovieList):
+            Movie_Ratgs.append((idx + 1, val))
+
+    preds= sorted(Movie_Ratgs, key=last, reverse=True)[:min(count, len(Movie_Ratgs))]
+    selected_ids=[]
+    for p in preds:
+        selected_ids.append(p[0])
+    top_selected_movie_ids = selected_ids
+    result = []
+    for id in top_selected_movie_ids:
+        # print(title_by_id[id])
+        result.append(title_by_id[id])
+    return result
+
+
+
+
+preds = recommendSVD(45, 10)
+print(preds)
 
 
 def content_based(user):
@@ -47,7 +92,7 @@ def content_based(user):
     title_by_id = pd.Series(titles, index=ind)
     movies_by_user = pd.Series(df.movie_ids.values, index=df.user_id)
     if debug:
-        print movies_by_user
+        print(movies_by_user)
     # movie_title = 'Toy Story (1995)'
     # user = 1
     if user in df.user_id.values:
@@ -91,34 +136,52 @@ def content_based(user):
 def hello():
     if request.method == 'POST':
         s = request.form.get('s')
-
+        classifiers=False
         print(s)
         r = []
 
         cf_item = []
         cf_user = []
+        knn=[]
+        svd=[]
+        mlp=[]
+        cont_g_y=[]
         if (s).isdigit():
             print("True -------------")
             ids, cf_item = getRecommendation(int(s))
             ids, cf_user = getRecommended(int(s))
-        else:
-            r = content_based(s)
+            r=content_based(int(s))
+            cont_g_y=content_genre_year(int(s))
+            svd = recommendSVD(int(s), 5)
+            if classifiers:
+                from mlp import mlp_knn_recommender
+                knn = mlp_knn_recommender(2, int(s))
+
+                mlp=mlp_knn_recommender(1,int(s))
+        # else:
+        #     r = content_based(s)
         err = len(r)
         print("length :", len(r), len(cf_item), len(cf_user))
-        if len(r) != 0 and len(cf_item) == 0 and len(cf_user) == 0:
-
-            context = {
-                'text': s,
-                'res': r,
-
-            }
-        elif len(r) == 0 and len(cf_item) != 0 and len(cf_user) != 0:
+        # if len(r) != 0 and len(cf_item) == 0 and len(cf_user) == 0:
+        #
+        #     context = {
+        #         'text': s,
+        #         'res': r,
+        #
+        #     }
+        if len(r) != 0 and len(cf_item) != 0 and len(cf_user) != 0:
             context = {
                 'text': s,
                 'cf_res': cf_item,
                 'cf_user': cf_user,
+                'res':r,
+                # 'knn':knn,
+                'svd':svd,
+                # 'mlp':mlp,
+                'cont':cont_g_y,
 
             }
+
 
         else:
             context = {
